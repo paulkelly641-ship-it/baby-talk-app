@@ -1,4 +1,4 @@
-# Build & Upload Steps — Baby Talk for iOS
+# Build & Upload Steps — My Baby Smarter for iOS
 
 Modeled on the working Potty Mouth flow (Codemagic + GitHub, no Mac).
 Do the steps in order. Steps 1–4 can be done in Safari on a phone.
@@ -17,31 +17,31 @@ Do the steps in order. Steps 1–4 can be done in Safari on a phone.
 
 1. Open [App Store Connect](https://appstoreconnect.apple.com) in Safari.
 2. My Apps → **+** → New App.
-3. Name: **Baby Talk**. Bundle ID: `com.babytalk.app`.
+3. Name: **My Baby Smarter**. Bundle ID: `com.paulkelly.mybabysmarter`.
    (Register the bundle ID first under Certificates, Identifiers &
    Profiles if it asks.)
-4. SKU: anything, e.g. `babytalk001`. User Access: Full Access.
+4. SKU: anything, e.g. `mybabysmarter001`. User Access: Full Access.
 
 ## 2. Create the 3 In-App Purchase products (phone OK)
 
-App Store Connect → Baby Talk → Monetization → In-App Purchases.
+App Store Connect → My Baby Smarter → Monetization → In-App Purchases.
 
-1. **Monthly** — Product ID `com.babytalk.app.monthly`, $9.99,
+1. **Monthly** — Product ID `com.paulkelly.mybabysmarter.monthly`, $9.99,
    **Auto-Renewable Subscription**. Subscription group: create
-   **"Baby Talk Premium"**.
-2. **Yearly** — Product ID `com.babytalk.app.yearly`, $59.99,
-   **Auto-Renewable Subscription**. Same group, "Baby Talk Premium".
-3. **Lifetime** — Product ID `com.babytalk.app.lifetime`, $99.99,
+   **"My Baby Smarter Premium"**.
+2. **Yearly** — Product ID `com.paulkelly.mybabysmarter.yearly`, $59.99,
+   **Auto-Renewable Subscription**. Same group, "My Baby Smarter Premium".
+3. **Lifetime** — Product ID `com.paulkelly.mybabysmarter.lifetime`, $99.99,
    **Non-Consumable**. (Not a subscription — do not put it in the group.)
 
-Fill in a display name and description for each (e.g. "Baby Talk
+Fill in a display name and description for each (e.g. "My Baby Smarter
 Monthly — full access to all talking stages"). Submit them for review
 with the app.
 
 ## 3. Set up RevenueCat (phone OK for the dashboard)
 
-1. Sign up at revenuecat.com (free) and add the Baby Talk app (iOS,
-   bundle ID `com.babytalk.app`).
+1. Sign up at revenuecat.com (free) and add the My Baby Smarter app (iOS,
+   bundle ID `com.paulkelly.mybabysmarter`).
 2. Link your App Store Connect account in RevenueCat (uses the same
    App Store Connect API key — it imports your products automatically).
 3. Create an **Entitlement** named exactly **`premium`** and attach all
@@ -55,8 +55,8 @@ with the app.
 
 ## 4. Paste the store listing (phone OK)
 
-In App Store Connect → Baby Talk → App Store listing, paste from
-`store/APP_STORE_LISTING.md`: name "Baby Talk — First Words", subtitle,
+In App Store Connect → My Baby Smarter → App Store listing, paste from
+`store/APP_STORE_LISTING.md`: name "My Baby Smarter — First Words", subtitle,
 promo text, description, keywords. Category: **Education**, Kids
 Category, ages 5 and under. Age rating: 4+.
 
@@ -94,7 +94,7 @@ as Potty Mouth.)
 
 ## 7. Submit for Review (phone OK)
 
-1. App Store Connect → Baby Talk → select the uploaded build.
+1. App Store Connect → My Baby Smarter → select the uploaded build.
 2. Paste the **review notes** from `store/APP_STORE_LISTING.md`.
 3. Make sure the IAP products are attached and submitted.
 4. **Submit for Review.**

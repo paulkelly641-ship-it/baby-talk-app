@@ -1,4 +1,4 @@
-# Baby Talk — First Words
+# My Baby Smarter — First Words
 
 A baby speech-learning app for ages 0–3, built as a plain static web app
 and wrapped with **Capacitor** for iOS. It is published to the App Store
@@ -29,12 +29,12 @@ child's first name are stored only on the device (localStorage).
 
 | Product  | Product ID                  | Price  | Type                        |
 |----------|-----------------------------|--------|-----------------------------|
-| Monthly  | `com.babytalk.app.monthly`  | $9.99  | Auto-renewable subscription |
-| Yearly   | `com.babytalk.app.yearly`   | $59.99 | Auto-renewable subscription |
-| Lifetime | `com.babytalk.app.lifetime` | $99.99 | Non-consumable              |
+| Monthly  | `com.paulkelly.mybabysmarter.monthly`  | $9.99  | Auto-renewable subscription |
+| Yearly   | `com.paulkelly.mybabysmarter.yearly`   | $59.99 | Auto-renewable subscription |
+| Lifetime | `com.paulkelly.mybabysmarter.lifetime` | $99.99 | Non-consumable              |
 
-Bundle ID: `com.babytalk.app`. Monthly & Yearly belong to subscription
-group **"Baby Talk Premium"**. Lifetime is a **non-consumable**, not a
+Bundle ID: `com.paulkelly.mybabysmarter`. Monthly & Yearly belong to subscription
+group **"My Baby Smarter Premium"**. Lifetime is a **non-consumable**, not a
 subscription.
 
 Purchases go through **Apple In-App Purchase via the RevenueCat Capacitor
@@ -69,7 +69,7 @@ gracefully to preview mode instead of breaking.
 ```
 baby-talk-github/
 ├── www/index.html              # the whole app (inline CSS + JS, no build step)
-├── capacitor.config.json       # appId com.babytalk.app, webDir www
+├── capacitor.config.json       # appId com.paulkelly.mybabysmarter, webDir www
 ├── package.json                # Capacitor 8 + RevenueCat 14.1.0
 ├── codemagic.yaml              # ios-workflow: cloud Mac build -> App Store Connect
 ├── BUILD_STEPS_IOS.md          # full step-by-step for Apple upload
@@ -103,11 +103,11 @@ These cannot be done from this repo — they need the user's own accounts:
 
 1. **App Store Connect — create the 3 IAP products** (see
    `BUILD_STEPS_IOS.md`): Monthly $9.99 and Yearly $59.99 as
-   auto-renewable subscriptions in group "Baby Talk Premium";
+   auto-renewable subscriptions in group "My Baby Smarter Premium";
    Lifetime $99.99 as a non-consumable. Product IDs are in the table
    above.
 2. **RevenueCat — free account + public key**: sign up at revenuecat.com,
-   add the Baby Talk app, create an Entitlement named **`premium`**,
+   add the My Baby Smarter app, create an Entitlement named **`premium`**,
    link all three products to it, create an Offering with the three
    packages, then paste the **public Apple API key** (starts with
    `appl_`) into `www/index.html` where it says

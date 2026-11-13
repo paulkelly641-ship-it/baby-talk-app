@@ -1,11 +1,11 @@
 workflows:
   ios-workflow:
-    name: Baby Talk
+    name: My Baby Smarter
     instance_type: mac_mini_m2
     environment:
       groups: [appstore]
       vars:
-        BUNDLE_ID: com.babytalk.app
+        BUNDLE_ID: com.paulkelly.mybabysmarter
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
       node: 22.12.0
@@ -15,7 +15,7 @@ workflows:
       - name: Build
         script: |
           npm ci || npm install
-          echo '{"appId":"com.babytalk.app","appName":"Baby Talk","webDir":"www"}' > capacitor.config.json
+          echo '{"appId":"com.paulkelly.mybabysmarter","appName":"My Baby Smarter","webDir":"www"}' > capacitor.config.json
           if [ -f index.html ] && [ ! -d www ]; then mkdir -p www; cp index.html www/; fi
           npm run build || true
           rm -rf ios

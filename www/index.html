@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Baby Talk — First Words</title>
-<meta name="description" content="Baby Talk teaches babies to talk: babbling sounds, first words, and little sentences — all in one app.">
+<title>My Baby Smarter — First Words</title>
+<meta name="description" content="My Baby Smarter teaches babies to talk: babbling sounds, first words, and little sentences — all in one app.">
 <!--
   BABY TALK — single-file static app (no bundler, no build step).
   The learning content (cards, speech, stars) works fully offline.
@@ -190,7 +190,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="logo">🗣️ Baby Talk<small>FIRST WORDS &middot; AGES 0&ndash;3</small></div>
+    <div class="logo">🗣️ My Baby Smarter<small>FIRST WORDS &middot; AGES 0&ndash;3</small></div>
     <div class="stars-badge" id="starsBadge">⭐ 0</div>
   </header>
 
@@ -299,31 +299,31 @@
       Steps 1–4 below can all be done in Safari on your phone. Only the final build &amp; upload needs a Mac — and Codemagic does that in the cloud from your GitHub repo, so you still never need your own Mac.
     </div>
     <ol class="steps">
-      <li><b>Create the app in App Store Connect</b> (Safari on your phone): My Apps → + → New App. Name: <b>Baby Talk</b>, Bundle ID: <code>com.babytalk.app</code>, SKU: anything (e.g. <code>babytalk001</code>).</li>
+      <li><b>Create the app in App Store Connect</b> (Safari on your phone): My Apps → + → New App. Name: <b>My Baby Smarter</b>, Bundle ID: <code>com.paulkelly.mybabysmarter</code>, SKU: anything (e.g. <code>mybabysmarter001</code>).</li>
       <li><b>Paste the store listing</b> below (name, subtitle, description, keywords). Upload the 1024×1024 icon (<code>store/app-icon-1024.png</code>) and screenshots (6.9″ and 6.5″ iPhone).</li>
-      <li><b>Create the 3 In-App Purchases:</b> Monthly $9.99 and Yearly $59.99 as <b>auto-renewable subscriptions</b> in group <b>“Baby Talk Premium”</b>; Lifetime $99.99 as a <b>non-consumable</b> (not a subscription). Product IDs are in the table below.</li>
+      <li><b>Create the 3 In-App Purchases:</b> Monthly $9.99 and Yearly $59.99 as <b>auto-renewable subscriptions</b> in group <b>“My Baby Smarter Premium”</b>; Lifetime $99.99 as a <b>non-consumable</b> (not a subscription). Product IDs are in the table below.</li>
       <li><b>Add bank &amp; tax info</b> in App Store Connect → Agreements, Tax, and Banking (needed before you can be paid).</li>
       <li><b>Push this project to GitHub</b> (new repo, e.g. <code>baby-talk-app</code>), connect it in Codemagic, and run the <b>ios-workflow</b>. Codemagic builds the IPA on a cloud Mac and uploads it to App Store Connect. Then pick the build in App Store Connect and <b>Submit for Review</b>.</li>
     </ol>
     <h3>App Store listing (copy &amp; paste)</h3>
-    <p><b>Name:</b> Baby Talk — First Words</p>
+    <p><b>Name:</b> My Baby Smarter — First Words</p>
     <p><b>Subtitle:</b> Babbling, first words &amp; sentences</p>
     <p><b>Promo text:</b> Help your baby learn to talk! Babbling sounds, first words, and little sentences — all in one safe, ad-free app for ages 0–3.</p>
-    <p><b>Description:</b> Baby Talk helps babies and toddlers learn to talk. Big, colorful cards speak every sound, word, and sentence out loud — just tap and listen, then say it together. Babble &amp; Sounds (6–12 months), First Words (1–2 years), and Little Sentences (2–3 years). Progress stars, favorites, and parent tips included. No ads, no tracking, no links out. A grown-up must answer a quick question before any purchase.</p>
+    <p><b>Description:</b> My Baby Smarter helps babies and toddlers learn to talk. Big, colorful cards speak every sound, word, and sentence out loud — just tap and listen, then say it together. Babble &amp; Sounds (6–12 months), First Words (1–2 years), and Little Sentences (2–3 years). Progress stars, favorites, and parent tips included. No ads, no tracking, no links out. A grown-up must answer a quick question before any purchase.</p>
     <p><b>Keywords:</b> baby talk, first words, toddler speech, baby sounds, learn to talk, babble, baby learning, speech for toddlers, kids words, baby app</p>
     <p><b>Category:</b> Education — Kids Category, ages 5 and under. <b>Age rating:</b> 4+. <b>Support:</b> paulkelly641@gmail.com</p>
     <h3>In-App Purchase product IDs</h3>
     <table>
       <tr><th>Product</th><th>Product ID</th><th>Price</th><th>Type</th></tr>
-      <tr><td>Monthly</td><td><code>com.babytalk.app.monthly</code></td><td>$9.99</td><td>Auto-renewable subscription</td></tr>
-      <tr><td>Yearly</td><td><code>com.babytalk.app.yearly</code></td><td>$59.99</td><td>Auto-renewable subscription</td></tr>
-      <tr><td>Lifetime</td><td><code>com.babytalk.app.lifetime</code></td><td>$99.99</td><td>Non-consumable</td></tr>
+      <tr><td>Monthly</td><td><code>com.paulkelly.mybabysmarter.monthly</code></td><td>$9.99</td><td>Auto-renewable subscription</td></tr>
+      <tr><td>Yearly</td><td><code>com.paulkelly.mybabysmarter.yearly</code></td><td>$59.99</td><td>Auto-renewable subscription</td></tr>
+      <tr><td>Lifetime</td><td><code>com.paulkelly.mybabysmarter.lifetime</code></td><td>$99.99</td><td>Non-consumable</td></tr>
     </table>
-    <p class="muted">Monthly &amp; Yearly belong to subscription group “Baby Talk Premium”. Lifetime is a non-consumable, outside the group.</p>
+    <p class="muted">Monthly &amp; Yearly belong to subscription group “My Baby Smarter Premium”. Lifetime is a non-consumable, outside the group.</p>
     <h3>Review notes (for the App Review team)</h3>
     <p class="muted">This is a kids’ learning app, ages 5 and under. All content is built in and works offline. There are no ads, no external links, and no account. Purchases use Apple In-App Purchase only, behind a parental gate (grown-ups answer 7 + 5). A demo subscription can be tested with a sandbox account.</p>
     <h3>Privacy Policy &amp; Terms</h3>
-    <p class="muted">Full privacy policy: <code>store/privacy-policy.html</code> in this repo (host it on GitHub Pages and paste the link in App Store Connect). Short version: Baby Talk collects no personal data. Progress stars, favorites, and the child’s first name are stored only on the device. No ads, no tracking, no third-party analytics. Contact: paulkelly641@gmail.com. Terms: subscriptions are billed through your Apple ID, renew automatically unless cancelled at least 24 hours before the period ends, and can be managed or cancelled in Settings &gt; Apple ID &gt; Subscriptions. Lifetime is a one-time purchase.</p>
+    <p class="muted">Full privacy policy: <code>store/privacy-policy.html</code> in this repo (host it on GitHub Pages and paste the link in App Store Connect). Short version: My Baby Smarter collects no personal data. Progress stars, favorites, and the child’s first name are stored only on the device. No ads, no tracking, no third-party analytics. Contact: paulkelly641@gmail.com. Terms: subscriptions are billed through your Apple ID, renew automatically unless cancelled at least 24 hours before the period ends, and can be managed or cancelled in Settings &gt; Apple ID &gt; Subscriptions. Lifetime is a one-time purchase.</p>
     <button class="btn btn-white" onclick="showView('view-paywall')">← Back to paywall</button>
   </section>
 
@@ -331,7 +331,7 @@
   <section id="view-privacy" class="view hidden">
     <h2>Privacy Policy</h2>
     <p><b>Last updated:</b> November 13, 2026</p>
-    <p>Baby Talk (“the app”) is made for babies and toddlers, ages 0–3, and their parents.</p>
+    <p>My Baby Smarter (“the app”) is made for babies and toddlers, ages 0–3, and their parents.</p>
     <p><b>What we collect: nothing.</b> The app does not collect, store, or share any personal information. There is no account, no sign-in, and no server that receives your data.</p>
     <p><b>On-device only:</b> your child’s first name (if you enter one), progress stars, and favorites are saved only on your own device, in the app’s local storage. They never leave the device.</p>
     <p><b>No ads, no tracking.</b> The app shows no advertisements, uses no analytics or tracking tools, and contains no links to outside websites.</p>
@@ -345,10 +345,10 @@
   <section id="view-terms" class="view hidden">
     <h2>Terms of Use</h2>
     <p><b>Last updated:</b> November 13, 2026</p>
-    <p><b>Subscriptions:</b> Baby Talk offers auto-renewable subscriptions (Monthly $9.99, Yearly $59.99) and a one-time Lifetime purchase ($99.99). Payment is charged to your Apple ID account at confirmation of purchase.</p>
+    <p><b>Subscriptions:</b> My Baby Smarter offers auto-renewable subscriptions (Monthly $9.99, Yearly $59.99) and a one-time Lifetime purchase ($99.99). Payment is charged to your Apple ID account at confirmation of purchase.</p>
     <p><b>Auto-renewal:</b> subscriptions renew automatically unless auto-renew is turned off at least 24 hours before the end of the current period. You can manage or cancel a subscription anytime in Settings &gt; Apple ID &gt; Subscriptions. Uninstalling the app does not cancel a subscription.</p>
     <p><b>Lifetime:</b> the Lifetime purchase is a one-time payment. It does not renew and does not expire.</p>
-    <p><b>Use:</b> Baby Talk is a learning aid, not medical or speech-therapy advice. If you have concerns about your child’s speech development, talk to your pediatrician.</p>
+    <p><b>Use:</b> My Baby Smarter is a learning aid, not medical or speech-therapy advice. If you have concerns about your child’s speech development, talk to your pediatrician.</p>
     <p><b>Refunds:</b> purchases are handled by Apple. Refund requests go through Apple’s Report a Problem page.</p>
     <p><b>Contact:</b> paulkelly641@gmail.com.</p>
     <button class="btn btn-white" onclick="goBackFromLegal()">← Back</button>
@@ -392,7 +392,7 @@
    ===================================================================== */
 
 // ---- TODO: paste your RevenueCat PUBLIC Apple API key here ----------------
-// Create a free account at revenuecat.com, add the Baby Talk app, and copy
+// Create a free account at revenuecat.com, add the My Baby Smarter app, and copy
 // the PUBLIC Apple API key (it starts with "appl_"). Until this is set,
 // the native paywall shows a "Not set up yet" note and cannot purchase.
 // The key is PUBLIC (safe to ship in the app) — never paste a secret key.
@@ -404,9 +404,9 @@ const ENTITLEMENT_ID = 'premium';
 
 // ---- Products (do not change — these are the App Store Connect IDs) -----
 const PRODUCTS = {
-  monthly:  { id: 'com.babytalk.app.monthly',  price: '$9.99',  period: 'month',  label: 'Monthly' },
-  yearly:   { id: 'com.babytalk.app.yearly',   price: '$59.99', period: 'year',   label: 'Yearly' },
-  lifetime: { id: 'com.babytalk.app.lifetime', price: '$99.99', period: 'once',   label: 'Lifetime' },
+  monthly:  { id: 'com.paulkelly.mybabysmarter.monthly',  price: '$9.99',  period: 'month',  label: 'Monthly' },
+  yearly:   { id: 'com.paulkelly.mybabysmarter.yearly',   price: '$59.99', period: 'year',   label: 'Yearly' },
+  lifetime: { id: 'com.paulkelly.mybabysmarter.lifetime', price: '$99.99', period: 'once',   label: 'Lifetime' },
 };
 const PLANS = ['monthly', 'yearly', 'lifetime'];
 
@@ -467,7 +467,7 @@ const TIPS = [
 const STAGE_NAMES = { babble: 'Babble & Sounds', words: 'First Words', sentences: 'Little Sentences' };
 
 // ---- Local state (on-device only — nothing leaves the phone) -------------
-const STORE_KEY = 'babytalk.v1';
+const STORE_KEY = 'mybabysmarter.v1';
 let state = loadState();
 function loadState() {
   try {
@@ -827,7 +827,7 @@ async function onSubscribe() {
     const customerInfo = result && result.customerInfo;
     if (hasPremium(customerInfo)) {
       unlock(selectedPlan, 'purchase');
-      toast('🎉 Welcome to Baby Talk Premium!');
+      toast('🎉 Welcome to My Baby Smarter Premium!');
     } else {
       toast('Purchase finished, but the subscription is not active yet. Try Restore Purchases.');
     }

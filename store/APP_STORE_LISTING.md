@@ -1,10 +1,10 @@
-# App Store Listing — Baby Talk
+# App Store Listing — My Baby Smarter
 
-Copy and paste these fields into App Store Connect (My Apps → Baby Talk →
+Copy and paste these fields into App Store Connect (My Apps → My Baby Smarter →
 App Information / App Store listing). Full instructions: `BUILD_STEPS_IOS.md`.
 
 ## App name
-Baby Talk — First Words
+My Baby Smarter — First Words
 
 ## Subtitle (30 characters max)
 Babbling, first words & sentences
@@ -13,7 +13,7 @@ Babbling, first words & sentences
 Help your baby learn to talk! Babbling sounds, first words, and little sentences — all in one safe, ad-free app for ages 0–3.
 
 ## Description (4000 characters max)
-Baby Talk helps babies and toddlers learn to talk — one tap at a time.
+My Baby Smarter helps babies and toddlers learn to talk — one tap at a time.
 
 Big, colorful cards speak every sound, word, and sentence out loud. Just tap
 and listen, then say it together!
@@ -62,11 +62,11 @@ Support email: paulkelly641@gmail.com
 ## In-App Purchases
 | Product  | Product ID                  | Price  | Type                        |
 |----------|-----------------------------|--------|-----------------------------|
-| Monthly  | com.babytalk.app.monthly    | $9.99  | Auto-renewable subscription |
-| Yearly   | com.babytalk.app.yearly     | $59.99 | Auto-renewable subscription |
-| Lifetime | com.babytalk.app.lifetime   | $99.99 | Non-consumable              |
+| Monthly  | com.paulkelly.mybabysmarter.monthly    | $9.99  | Auto-renewable subscription |
+| Yearly   | com.paulkelly.mybabysmarter.yearly     | $59.99 | Auto-renewable subscription |
+| Lifetime | com.paulkelly.mybabysmarter.lifetime   | $99.99 | Non-consumable              |
 
-Monthly & Yearly belong to subscription group "Baby Talk Premium".
+Monthly & Yearly belong to subscription group "My Baby Smarter Premium".
 Lifetime is a non-consumable, outside the group.
 
 ## Review notes (for the App Review team)
