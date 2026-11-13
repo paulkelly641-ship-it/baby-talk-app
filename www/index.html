@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Baby Talk — First Words</title>
+<meta name="description" content="Baby Talk teaches babies to talk: babbling sounds, first words, and little sentences — all in one app.">
+<!--
+  BABY TALK — single-file static app (no bundler, no build step).
+  The learning content (cards, speech, stars) works fully offline.
+  Native purchases run through the RevenueCat Capacitor plugin, reached
+  via Capacitor.registerPlugin('Purchases') — the plugin's own JS module
+  is NOT imported, because its ESM files use extensionless relative
+  imports ('./definitions') that browsers cannot resolve without a
+  bundler. registerPlugin calls the same native methods directly
+  (configure, getOfferings, purchasePackage, restorePurchases,
+  getCustomerInfo). If the native bridge cannot load (plain web, or
+  offline), the app still works and the paywall shows a preview note:
+  real payment happens through Apple In-App Purchase on iPhone/iPad.
+  See README.md for the full setup (RevenueCat key, App Store Connect).
+-->
+<script type="importmap">
+{
+  "imports": {
+    "@capacitor/core": "https://cdn.jsdelivr.net/npm/@capacitor/core@8.6.2/dist/index.js"
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: linear-gradient(180deg, #FFF6D6 0%, #FFE9F3 45%, #E3F2FF 100%);
+    color: #333; min-height: 100vh;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; margin: 0 -16px 8px;
+    background: rgba(255, 246, 214, 0.95); backdrop-filter: blur(6px);
+    border-bottom: 3px solid #FFD93D;
+  }
+  .logo { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; }
+  .logo small { display: block; font-size: 12px; font-weight: 700; color: #888; letter-spacing: 0.5px; }
+  .stars-badge {
+    background: #fff; border: 3px solid #FFD93D; border-radius: 999px;
+    font-size: 20px; font-weight: 900; padding: 6px 14px; white-space: nowrap;
+  }
+  .hidden { display: none !important; }
+  h1 { font-size: 34px; line-height: 1.15; margin: 12px 0 6px; text-align: center; }
+  h2 { font-size: 24px; margin: 22px 0 10px; }
+  h3 { font-size: 19px; margin: 18px 0 8px; }
+  p { font-size: 17px; line-height: 1.5; }
+  .center { text-align: center; }
+  .muted { color: #777; font-size: 14px; line-height: 1.5; }
+  .hero-emoji { font-size: 84px; text-align: center; line-height: 1.1; margin-top: 8px; }
+  .stage-preview { display: flex; gap: 10px; margin: 16px 0; }
+  .stage-preview div {
+    flex: 1; background: #fff; border-radius: 20px; padding: 12px 6px;
+    text-align: center; border: 3px solid #eee; font-weight: 800; font-size: 14px;
+  }
+  .stage-preview .e { font-size: 34px; display: block; }
+  .plan {
+    background: #fff; border: 3px solid #e5e5e5; border-radius: 24px;
+    padding: 16px 18px; margin: 12px 0; cursor: pointer; position: relative;
+  }
+  .plan.selected { border-color: #9B5DE5; background: #F6EFFF; box-shadow: 0 4px 0 #9B5DE5; }
+  .plan .p-name { font-size: 22px; font-weight: 900; }
+  .plan .p-price { font-size: 19px; font-weight: 800; color: #118AB2; }
+  .plan .p-note { font-size: 14px; color: #777; margin-top: 2px; }
+  .plan .p-tag {
+    position: absolute; top: -12px; right: 14px; background: #FF6B6B; color: #fff;
+    font-size: 13px; font-weight: 900; padding: 4px 10px; border-radius: 999px;
+  }
+  .btn {
+    display: block; width: 100%; min-height: 60px; border: none; border-radius: 999px;
+    font-size: 21px; font-weight: 900; cursor: pointer; margin: 12px 0; padding: 12px 20px;
+    font-family: inherit;
+  }
+  .btn-primary { background: #06D6A0; color: #fff; box-shadow: 0 4px 0 #049e77; }
+  .btn-primary:active { transform: translateY(3px); box-shadow: none; }
+  .btn-purple { background: #9B5DE5; color: #fff; box-shadow: 0 4px 0 #6d34b0; }
+  .btn-purple:active { transform: translateY(3px); box-shadow: none; }
+  .btn-white { background: #fff; color: #333; border: 3px solid #ddd; box-shadow: 0 4px 0 #ddd; }
+  .btn-white:active { transform: translateY(3px); box-shadow: none; }
+  .btn:disabled { opacity: 0.55; }
+  .linkrow { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin: 14px 0; }
+  .linkrow button {
+    background: none; border: none; color: #118AB2; font-size: 15px; font-weight: 700;
+    text-decoration: underline; cursor: pointer; padding: 6px; font-family: inherit;
+  }
+  .note-box {
+    background: #FFF8E1; border: 2px dashed #FFD93D; border-radius: 16px;
+    padding: 12px 14px; font-size: 14px; line-height: 1.5; margin: 14px 0;
+  }
+  .warn-box {
+    background: #FDECEA; border: 2px solid #FF6B6B; border-radius: 16px;
+    padding: 12px 14px; font-size: 14px; line-height: 1.5; margin: 14px 0;
+  }
+  .tabs { display: flex; gap: 8px; margin: 12px 0; }
+  .tab {
+    flex: 1; border: 3px solid #e5e5e5; background: #fff; border-radius: 18px;
+    padding: 10px 4px; font-size: 15px; font-weight: 900; cursor: pointer; font-family: inherit;
+  }
+  .tab.selected { border-color: #FF6B6B; background: #FFF0F0; }
+  .tab .e { font-size: 26px; display: block; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+  .card {
+    background: #fff; border-radius: 24px; border: 3px solid #eee;
+    min-height: 132px; padding: 12px 8px; cursor: pointer; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: inherit;
+  }
+  .card:active { transform: scale(0.96); }
+  .card .emoji { font-size: 56px; line-height: 1.1; }
+  .card .label { font-size: 24px; font-weight: 900; margin-top: 4px; text-align: center; }
+  .card .hint { font-size: 12px; color: #999; font-weight: 700; }
+  .card .star-count {
+    position: absolute; top: 8px; right: 10px; background: #FFD93D; border-radius: 999px;
+    font-size: 13px; font-weight: 900; padding: 2px 8px;
+  }
+  .card .fav-btn {
+    position: absolute; top: 6px; left: 8px; background: none; border: none;
+    font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
+  }
+  .card.babble { background: #FFF3D6; border-color: #FFD93D; }
+  .card.words { background: #E3F6FF; border-color: #4ECDC4; }
+  .card.sentences { background: #F3E9FF; border-color: #9B5DE5; }
+  .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .chip {
+    border: 3px solid #ddd; background: #fff; border-radius: 999px; padding: 8px 14px;
+    font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit;
+  }
+  .chip.selected { border-color: #F15BB5; background: #FFE9F6; }
+  .tip {
+    background: #fff; border-radius: 18px; border: 3px solid #E3F2FF;
+    padding: 14px 16px; margin: 10px 0; font-size: 16px; line-height: 1.5;
+  }
+  .tip b { font-size: 17px; }
+  .modal {
+    position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.55);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-card {
+    background: #fff; border-radius: 28px; padding: 24px 20px; width: 100%; max-width: 420px;
+    text-align: center; max-height: 88vh; overflow-y: auto;
+  }
+  .modal-card .big-emoji { font-size: 96px; line-height: 1.1; }
+  .modal-card .big-word { font-size: 40px; font-weight: 900; margin: 8px 0; line-height: 1.15; }
+  .gate-answers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .gate-answers button {
+    min-height: 64px; font-size: 28px; font-weight: 900; border-radius: 18px;
+    border: 3px solid #ddd; background: #fff; cursor: pointer; font-family: inherit;
+  }
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); } 75% { transform: translateX(8px); }
+  }
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+    background: #333; color: #fff; font-size: 16px; font-weight: 700;
+    padding: 14px 20px; border-radius: 999px; z-index: 60; max-width: 92vw; text-align: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 10px 0; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background: #f6f6f6; }
+  code { background: #f0f0f0; padding: 2px 6px; border-radius: 6px; font-size: 13px; word-break: break-all; }
+  pre {
+    background: #222; color: #d6ffd6; padding: 14px; border-radius: 14px;
+    overflow-x: auto; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+  }
+  input[type="text"], select {
+    width: 100%; font-size: 18px; padding: 12px 14px; border-radius: 14px;
+    border: 3px solid #ddd; margin: 6px 0 12px; font-family: inherit;
+  }
+  label { font-weight: 800; font-size: 15px; }
+  ol.steps li, ul.checklist li { font-size: 16px; line-height: 1.55; margin-bottom: 8px; }
+  .kit-btn {
+    display: block; width: 100%; background: #222; color: #fff; border-radius: 24px;
+    padding: 18px; margin: 16px 0; cursor: pointer; text-align: left; border: none; font-family: inherit;
+  }
+  .kit-btn .t { font-size: 20px; font-weight: 900; }
+  .kit-btn .s { font-size: 14px; color: #bbb; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🗣️ Baby Talk<small>FIRST WORDS &middot; AGES 0&ndash;3</small></div>
+    <div class="stars-badge" id="starsBadge">⭐ 0</div>
+  </header>
+
+  <!-- ============ PAYWALL (first screen) ============ -->
+  <section id="view-paywall" class="view">
+    <div class="hero-emoji">👶💬🎉</div>
+    <h1>Help your baby learn to talk!</h1>
+    <p class="center">Babbling sounds, first words, and little sentences — all in one app, made for ages 0 to 3.</p>
+    <div class="stage-preview">
+      <div><span class="e">👶</span>Babble<br>6&ndash;12 mo</div>
+      <div><span class="e">💬</span>First Words<br>1&ndash;2 yr</div>
+      <div><span class="e">🗨️</span>Sentences<br>2&ndash;3 yr</div>
+    </div>
+
+    <h2 class="center">Choose a plan</h2>
+    <div class="plan" data-plan="monthly" onclick="selectPlan('monthly')">
+      <div class="p-name">Monthly</div>
+      <div class="p-price">$9.99 / month</div>
+      <div class="p-note">Flexible — cancel anytime</div>
+    </div>
+    <div class="plan selected" data-plan="yearly" onclick="selectPlan('yearly')">
+      <span class="p-tag">BEST VALUE</span>
+      <div class="p-name">Yearly</div>
+      <div class="p-price">$59.99 / year</div>
+      <div class="p-note">Save about 50% vs monthly</div>
+    </div>
+    <div class="plan" data-plan="lifetime" onclick="selectPlan('lifetime')">
+      <div class="p-name">Lifetime</div>
+      <div class="p-price">$99.99 one-time</div>
+      <div class="p-note">Pay once, keep it forever</div>
+    </div>
+
+    <button class="btn btn-primary" id="subscribeBtn" onclick="onSubscribe()">Subscribe — $59.99 / year</button>
+    <button class="btn btn-white" onclick="onRestore()">Restore Purchases</button>
+
+    <p class="muted center" id="renewalNote">Payment will be charged to your Apple ID account at confirmation of purchase. Subscriptions automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period. Manage or cancel anytime in Settings &gt; Apple ID &gt; Subscriptions. Lifetime is a one-time purchase and does not renew.</p>
+
+    <div class="note-box" id="paywallNote">🔒 <b>Safe for kids:</b> no ads, no tracking, no links out. A grown-up must answer a quick question before any purchase.</div>
+    <div class="note-box hidden" id="previewNote">👀 <b>Preview:</b> this page is a preview. On iPhone and iPad, payment goes through Apple In-App Purchase — no card is ever charged here, and there is no card form in this app.</div>
+    <div class="warn-box hidden" id="setupNote">⚙️ <b>Not set up yet:</b> subscriptions need a RevenueCat public Apple API key. Add it in <code>www/index.html</code> where it says TODO, and create the three products in App Store Connect (see README.md).</div>
+
+    <button class="kit-btn" onclick="openKitGated()">
+      <div class="t">📦 Uploading to Apple?</div>
+      <div class="s">Open the Publish Kit — store listing, product IDs, privacy policy &amp; upload checklist</div>
+    </button>
+
+    <div class="linkrow">
+      <button onclick="showView('view-privacy')">Privacy Policy</button>
+      <button onclick="showView('view-terms')">Terms of Use</button>
+      <button onclick="openKitGated()">Publish Kit</button>
+    </div>
+  </section>
+
+  <!-- ============ MAIN APP ============ -->
+  <section id="view-app" class="view hidden">
+    <h2 id="greeting">Let's talk! 🗣️</h2>
+    <p class="center muted">Tap a card to hear it. Tap ⭐ when your baby says it!</p>
+    <div class="tabs">
+      <button class="tab selected" data-stage="babble" onclick="selectStage('babble')"><span class="e">👶</span>Babble</button>
+      <button class="tab" data-stage="words" onclick="selectStage('words')"><span class="e">💬</span>First Words</button>
+      <button class="tab" data-stage="sentences" onclick="selectStage('sentences')"><span class="e">🗨️</span>Sentences</button>
+    </div>
+    <div class="chip-row">
+      <button class="chip" id="favChip" onclick="toggleFavFilter()">♥ Favorites only</button>
+      <button class="chip" onclick="speakStageIntro()">🔊 Hear them all</button>
+    </div>
+    <div class="grid" id="cardGrid"></div>
+    <button class="btn btn-purple" onclick="showView('view-tips')">💡 Parent Tips</button>
+    <div class="linkrow">
+      <button onclick="showView('view-profile')">👨‍👩‍👧 Grown-ups: profile &amp; settings</button>
+      <button onclick="showView('view-privacy')">Privacy Policy</button>
+    </div>
+    <p class="muted center">Made with ❤️ for little talkers &middot; No ads &middot; No tracking</p>
+  </section>
+
+  <!-- ============ PARENT TIPS ============ -->
+  <section id="view-tips" class="view hidden">
+    <h2>💡 Parent Tips</h2>
+    <p>Short, simple things that help babies learn to talk. No pressure — a few minutes a day is plenty.</p>
+    <div id="tipsList"></div>
+    <button class="btn btn-white" onclick="showView('view-app')">← Back to the cards</button>
+  </section>
+
+  <!-- ============ GROWN-UPS / PROFILE ============ -->
+  <section id="view-profile" class="view hidden">
+    <h2>👨‍👩‍👧 Grown-ups</h2>
+    <label for="childName">Your child's first name</label>
+    <input type="text" id="childName" placeholder="e.g. Emma" maxlength="20">
+    <label for="prefStage">Start on this stage</label>
+    <select id="prefStage">
+      <option value="babble">Babble &amp; Sounds (6–12 months)</option>
+      <option value="words">First Words (1–2 years)</option>
+      <option value="sentences">Little Sentences (2–3 years)</option>
+    </select>
+    <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+    <button class="btn btn-white" onclick="resetProgress()">Reset stars &amp; favorites</button>
+    <p class="muted" id="subStatus">Subscription: not active.</p>
+    <button class="btn btn-white" onclick="showView('view-app')">← Back to the cards</button>
+  </section>
+
+  <!-- ============ PUBLISH KIT ============ -->
+  <section id="view-kit" class="view hidden">
+    <h2>📦 Publish Kit — Apple Upload</h2>
+    <div class="note-box">
+      <b>📱 No Mac? Just your phone</b><br>
+      Steps 1–4 below can all be done in Safari on your phone. Only the final build &amp; upload needs a Mac — and Codemagic does that in the cloud from your GitHub repo, so you still never need your own Mac.
+    </div>
+    <ol class="steps">
+      <li><b>Create the app in App Store Connect</b> (Safari on your phone): My Apps → + → New App. Name: <b>Baby Talk</b>, Bundle ID: <code>com.babytalk.app</code>, SKU: anything (e.g. <code>babytalk001</code>).</li>
+      <li><b>Paste the store listing</b> below (name, subtitle, description, keywords). Upload the 1024×1024 icon (<code>store/app-icon-1024.png</code>) and screenshots (6.9″ and 6.5″ iPhone).</li>
+      <li><b>Create the 3 In-App Purchases:</b> Monthly $9.99 and Yearly $59.99 as <b>auto-renewable subscriptions</b> in group <b>“Baby Talk Premium”</b>; Lifetime $99.99 as a <b>non-consumable</b> (not a subscription). Product IDs are in the table below.</li>
+      <li><b>Add bank &amp; tax info</b> in App Store Connect → Agreements, Tax, and Banking (needed before you can be paid).</li>
+      <li><b>Push this project to GitHub</b> (new repo, e.g. <code>baby-talk-app</code>), connect it in Codemagic, and run the <b>ios-workflow</b>. Codemagic builds the IPA on a cloud Mac and uploads it to App Store Connect. Then pick the build in App Store Connect and <b>Submit for Review</b>.</li>
+    </ol>
+    <h3>App Store listing (copy &amp; paste)</h3>
+    <p><b>Name:</b> Baby Talk — First Words</p>
+    <p><b>Subtitle:</b> Babbling, first words &amp; sentences</p>
+    <p><b>Promo text:</b> Help your baby learn to talk! Babbling sounds, first words, and little sentences — all in one safe, ad-free app for ages 0–3.</p>
+    <p><b>Description:</b> Baby Talk helps babies and toddlers learn to talk. Big, colorful cards speak every sound, word, and sentence out loud — just tap and listen, then say it together. Babble &amp; Sounds (6–12 months), First Words (1–2 years), and Little Sentences (2–3 years). Progress stars, favorites, and parent tips included. No ads, no tracking, no links out. A grown-up must answer a quick question before any purchase.</p>
+    <p><b>Keywords:</b> baby talk, first words, toddler speech, baby sounds, learn to talk, babble, baby learning, speech for toddlers, kids words, baby app</p>
+    <p><b>Category:</b> Education — Kids Category, ages 5 and under. <b>Age rating:</b> 4+. <b>Support:</b> paulkelly641@gmail.com</p>
+    <h3>In-App Purchase product IDs</h3>
+    <table>
+      <tr><th>Product</th><th>Product ID</th><th>Price</th><th>Type</th></tr>
+      <tr><td>Monthly</td><td><code>com.babytalk.app.monthly</code></td><td>$9.99</td><td>Auto-renewable subscription</td></tr>
+      <tr><td>Yearly</td><td><code>com.babytalk.app.yearly</code></td><td>$59.99</td><td>Auto-renewable subscription</td></tr>
+      <tr><td>Lifetime</td><td><code>com.babytalk.app.lifetime</code></td><td>$99.99</td><td>Non-consumable</td></tr>
+    </table>
+    <p class="muted">Monthly &amp; Yearly belong to subscription group “Baby Talk Premium”. Lifetime is a non-consumable, outside the group.</p>
+    <h3>Review notes (for the App Review team)</h3>
+    <p class="muted">This is a kids’ learning app, ages 5 and under. All content is built in and works offline. There are no ads, no external links, and no account. Purchases use Apple In-App Purchase only, behind a parental gate (grown-ups answer 7 + 5). A demo subscription can be tested with a sandbox account.</p>
+    <h3>Privacy Policy &amp; Terms</h3>
+    <p class="muted">Full privacy policy: <code>store/privacy-policy.html</code> in this repo (host it on GitHub Pages and paste the link in App Store Connect). Short version: Baby Talk collects no personal data. Progress stars, favorites, and the child’s first name are stored only on the device. No ads, no tracking, no third-party analytics. Contact: paulkelly641@gmail.com. Terms: subscriptions are billed through your Apple ID, renew automatically unless cancelled at least 24 hours before the period ends, and can be managed or cancelled in Settings &gt; Apple ID &gt; Subscriptions. Lifetime is a one-time purchase.</p>
+    <button class="btn btn-white" onclick="showView('view-paywall')">← Back to paywall</button>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section id="view-privacy" class="view hidden">
+    <h2>Privacy Policy</h2>
+    <p><b>Last updated:</b> November 13, 2026</p>
+    <p>Baby Talk (“the app”) is made for babies and toddlers, ages 0–3, and their parents.</p>
+    <p><b>What we collect: nothing.</b> The app does not collect, store, or share any personal information. There is no account, no sign-in, and no server that receives your data.</p>
+    <p><b>On-device only:</b> your child’s first name (if you enter one), progress stars, and favorites are saved only on your own device, in the app’s local storage. They never leave the device.</p>
+    <p><b>No ads, no tracking.</b> The app shows no advertisements, uses no analytics or tracking tools, and contains no links to outside websites.</p>
+    <p><b>Purchases:</b> subscriptions and the lifetime purchase are processed by Apple through In-App Purchase. Apple handles payment; we never see your card details. Purchase status is checked on-device through RevenueCat to unlock the app.</p>
+    <p><b>Children’s privacy:</b> the app is designed for use by a parent together with their child. A parental gate (a simple question only a grown-up answers) sits in front of all purchases and settings.</p>
+    <p><b>Contact:</b> questions? Email paulkelly641@gmail.com.</p>
+    <button class="btn btn-white" onclick="goBackFromLegal()">← Back</button>
+  </section>
+
+  <!-- ============ TERMS ============ -->
+  <section id="view-terms" class="view hidden">
+    <h2>Terms of Use</h2>
+    <p><b>Last updated:</b> November 13, 2026</p>
+    <p><b>Subscriptions:</b> Baby Talk offers auto-renewable subscriptions (Monthly $9.99, Yearly $59.99) and a one-time Lifetime purchase ($99.99). Payment is charged to your Apple ID account at confirmation of purchase.</p>
+    <p><b>Auto-renewal:</b> subscriptions renew automatically unless auto-renew is turned off at least 24 hours before the end of the current period. You can manage or cancel a subscription anytime in Settings &gt; Apple ID &gt; Subscriptions. Uninstalling the app does not cancel a subscription.</p>
+    <p><b>Lifetime:</b> the Lifetime purchase is a one-time payment. It does not renew and does not expire.</p>
+    <p><b>Use:</b> Baby Talk is a learning aid, not medical or speech-therapy advice. If you have concerns about your child’s speech development, talk to your pediatrician.</p>
+    <p><b>Refunds:</b> purchases are handled by Apple. Refund requests go through Apple’s Report a Problem page.</p>
+    <p><b>Contact:</b> paulkelly641@gmail.com.</p>
+    <button class="btn btn-white" onclick="goBackFromLegal()">← Back</button>
+  </section>
+</div>
+
+<!-- ============ PRACTICE MODAL ============ -->
+<div id="practiceModal" class="modal hidden">
+  <div class="modal-card">
+    <div class="big-emoji" id="practiceEmoji">👶</div>
+    <div class="big-word" id="practiceWord">ba-ba</div>
+    <p style="font-size:20px;font-weight:800;">Now you say it! 🎤</p>
+    <p class="muted">Say it out loud, then tap the star.</p>
+    <button class="btn btn-purple" onclick="hearAgain()">🔊 Hear it again</button>
+    <button class="btn btn-primary" onclick="earnStar()">⭐ I said it!</button>
+    <button class="btn btn-white" onclick="closePractice()">Done</button>
+  </div>
+</div>
+
+<!-- ============ PARENTAL GATE MODAL ============ -->
+<div id="gateModal" class="modal hidden">
+  <div class="modal-card" id="gateCard">
+    <div style="font-size:64px;">👨‍👩‍👧</div>
+    <h2 style="margin-top:4px;">Grown-ups only</h2>
+    <p style="font-size:19px;">What is <b>7 + 5</b>?</p>
+    <div class="gate-answers" id="gateAnswers"></div>
+    <p class="muted">This keeps little fingers from buying things by accident.</p>
+    <button class="btn btn-white" onclick="closeGate()">Cancel</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+/* =====================================================================
+   BABY TALK — app logic
+   - Learning content, speech, stars, favorites: 100% local, works offline.
+   - Purchases: ONLY through Apple In-App Purchase via the RevenueCat
+     Capacitor plugin, and ONLY on a native iOS build. There is no card
+     form and no web checkout anywhere in this app.
+   ===================================================================== */
+
+// ---- TODO: paste your RevenueCat PUBLIC Apple API key here ----------------
+// Create a free account at revenuecat.com, add the Baby Talk app, and copy
+// the PUBLIC Apple API key (it starts with "appl_"). Until this is set,
+// the native paywall shows a "Not set up yet" note and cannot purchase.
+// The key is PUBLIC (safe to ship in the app) — never paste a secret key.
+const REVENUECAT_APPLE_API_KEY = 'TODO_REPLACE_WITH_YOUR_REVENUECAT_PUBLIC_APPLE_API_KEY';
+
+// The Entitlement identifier in the RevenueCat dashboard. It must be named
+// exactly this and linked to all three products below.
+const ENTITLEMENT_ID = 'premium';
+
+// ---- Products (do not change — these are the App Store Connect IDs) -----
+const PRODUCTS = {
+  monthly:  { id: 'com.babytalk.app.monthly',  price: '$9.99',  period: 'month',  label: 'Monthly' },
+  yearly:   { id: 'com.babytalk.app.yearly',   price: '$59.99', period: 'year',   label: 'Yearly' },
+  lifetime: { id: 'com.babytalk.app.lifetime', price: '$99.99', period: 'once',   label: 'Lifetime' },
+};
+const PLANS = ['monthly', 'yearly', 'lifetime'];
+
+// ---- The 34 learning cards ----------------------------------------------
+const CARDS = [
+  // Babble & Sounds (6-12 months)
+  { id: 'b-ba',    stage: 'babble', emoji: '👶', label: 'ba-ba',    say: 'ba ba',    hint: 'Say it with me!' },
+  { id: 'b-ma',    stage: 'babble', emoji: '🤱', label: 'ma-ma',    say: 'ma ma',    hint: 'Say it with me!' },
+  { id: 'b-da',    stage: 'babble', emoji: '👨', label: 'da-da',    say: 'da da',    hint: 'Say it with me!' },
+  { id: 'b-ga',    stage: 'babble', emoji: '😀', label: 'ga-ga',    say: 'ga ga',    hint: 'Say it with me!' },
+  { id: 'b-moo',   stage: 'babble', emoji: '🐄', label: 'moo',      say: 'moo',      hint: 'What does the cow say?' },
+  { id: 'b-baa',   stage: 'babble', emoji: '🐑', label: 'baa',      say: 'baa',      hint: 'What does the sheep say?' },
+  { id: 'b-woof',  stage: 'babble', emoji: '🐶', label: 'woof',     say: 'woof',     hint: 'What does the dog say?' },
+  { id: 'b-meow',  stage: 'babble', emoji: '🐱', label: 'meow',     say: 'meow',     hint: 'What does the cat say?' },
+  { id: 'b-vroom', stage: 'babble', emoji: '🚗', label: 'vroom',    say: 'vroom',    hint: 'What does the car say?' },
+  { id: 'b-choo',  stage: 'babble', emoji: '🚂', label: 'choo-choo', say: 'choo choo', hint: 'What does the train say?' },
+  { id: 'b-pop',   stage: 'babble', emoji: '🫧', label: 'pop-pop',  say: 'pop pop',  hint: 'Pop the bubbles!' },
+  { id: 'b-la',    stage: 'babble', emoji: '🎵', label: 'la-la',    say: 'la la',    hint: 'Sing with me!' },
+  // First Words (1-2 years)
+  { id: 'w-mama',  stage: 'words', emoji: '👩', label: 'mama',     say: 'mama',     hint: 'Who is that?' },
+  { id: 'w-dada',  stage: 'words', emoji: '👨', label: 'dada',     say: 'dada',     hint: 'Who is that?' },
+  { id: 'w-ball',  stage: 'words', emoji: '⚽', label: 'ball',     say: 'ball',     hint: 'Bounce the ball!' },
+  { id: 'w-dog',   stage: 'words', emoji: '🐶', label: 'dog',      say: 'dog',      hint: 'Woof woof!' },
+  { id: 'w-cat',   stage: 'words', emoji: '🐱', label: 'cat',      say: 'cat',      hint: 'Meow!' },
+  { id: 'w-milk',  stage: 'words', emoji: '🥛', label: 'milk',     say: 'milk',     hint: 'Yum yum!' },
+  { id: 'w-more',  stage: 'words', emoji: '➕', label: 'more',     say: 'more',     hint: 'Want some more?' },
+  { id: 'w-up',    stage: 'words', emoji: '⬆️', label: 'up',       say: 'up',       hint: 'Up up up!' },
+  { id: 'w-bye',   stage: 'words', emoji: '👋', label: 'bye-bye',  say: 'bye bye',  hint: 'Wave bye-bye!' },
+  { id: 'w-book',  stage: 'words', emoji: '📖', label: 'book',     say: 'book',     hint: 'Story time!' },
+  { id: 'w-car',   stage: 'words', emoji: '🚗', label: 'car',      say: 'car',      hint: 'Beep beep!' },
+  { id: 'w-shoe',  stage: 'words', emoji: '👟', label: 'shoe',     say: 'shoe',     hint: 'Put your shoes on!' },
+  // Little Sentences (2-3 years)
+  { id: 's-milk',  stage: 'sentences', emoji: '🥛', label: 'I want milk', say: 'I want milk',  hint: 'Say the whole thing!' },
+  { id: 's-more',  stage: 'sentences', emoji: '🙏', label: 'More please', say: 'More please',  hint: 'Say the whole thing!' },
+  { id: 's-dog',   stage: 'sentences', emoji: '🐶', label: 'Big dog',     say: 'Big dog',      hint: 'Say the whole thing!' },
+  { id: 's-ball',  stage: 'sentences', emoji: '⚽', label: "Where's ball?", say: 'Where is the ball', hint: 'Say the whole thing!' },
+  { id: 's-love',  stage: 'sentences', emoji: '❤️', label: 'I love you',  say: 'I love you',   hint: 'Say the whole thing!' },
+  { id: 's-up',    stage: 'sentences', emoji: '🙌', label: 'Up please',   say: 'Up please',    hint: 'Say the whole thing!' },
+  { id: 's-done',  stage: 'sentences', emoji: '✅', label: 'All done',    say: 'All done',     hint: 'Say the whole thing!' },
+  { id: 's-turn',  stage: 'sentences', emoji: '🔄', label: 'My turn',     say: 'My turn',      hint: 'Say the whole thing!' },
+  { id: 's-look',  stage: 'sentences', emoji: '👀', label: 'Look at that', say: 'Look at that', hint: 'Say the whole thing!' },
+  { id: 's-thanks',stage: 'sentences', emoji: '😊', label: 'Thank you',   say: 'Thank you',    hint: 'Say the whole thing!' },
+];
+
+const TIPS = [
+  ['🗣️ Talk face to face', 'Get down at your baby’s eye level when you talk. They learn by watching your mouth move.'],
+  ['🔁 Say it back', 'When your baby babbles “ba-ba”, say “ba-ba!” back with a big smile. That back-and-forth is how talking starts.'],
+  ['📖 Read together', 'Even 5 minutes a day helps. Point at pictures and name them: “Look — dog! Woof woof!”'],
+  ['⏳ Wait for them', 'Ask “What’s this?” and then wait — count to 5 in your head. Give them time to try.'],
+  ['🎵 Sing songs', 'Songs like “Wheels on the Bus” teach sounds and words at the same time — and babies love them.'],
+  ['🏷️ Name everything', 'Narrate your day: “We’re putting on your shoe. Shoe! Now the other shoe.” Everyday words add up.'],
+  ['➕ Add one word', 'If your baby says “ball”, you say “big ball!” or “red ball!” — one extra word stretches them gently.'],
+  ['🎉 Celebrate tries', 'Any try counts. Clap, cheer, and smile when they attempt a sound — even if it isn’t perfect yet.'],
+  ['📺 Keep screens small', 'Real people talking beats any screen. If they watch something, watch together and talk about it.'],
+  ['🩺 Trust your gut', 'Every child talks on their own schedule. If you’re worried, ask your pediatrician — it’s always okay to ask.'],
+];
+
+const STAGE_NAMES = { babble: 'Babble & Sounds', words: 'First Words', sentences: 'Little Sentences' };
+
+// ---- Local state (on-device only — nothing leaves the phone) -------------
+const STORE_KEY = 'babytalk.v1';
+let state = loadState();
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* fresh start */ }
+  return { stars: {}, favorites: [], profile: { name: '', stage: 'babble' }, subscribed: null };
+}
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
+}
+function totalStars() {
+  return Object.values(state.stars).reduce((a, b) => a + (b || 0), 0);
+}
+
+// ---- Speech ---------------------------------------------------------------
+function speak(text, rate) {
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = rate || 0.75;
+    u.pitch = 1.1;
+    const voices = window.speechSynthesis.getVoices() || [];
+    const en = voices.find(v => v.lang && v.lang.toLowerCase().indexOf('en') === 0);
+    if (en) u.voice = en;
+    window.speechSynthesis.speak(u);
+  } catch (e) { /* speech unavailable */ }
+}
+
+// ---- Toast ------------------------------------------------------------------
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+// ---- Navigation -------------------------------------------------------------
+let lastView = 'view-paywall';
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  if (id !== 'view-privacy' && id !== 'view-terms') lastView = id;
+  window.scrollTo(0, 0);
+}
+function goBackFromLegal() { showView(lastView); }
+
+// ---- Paywall ---------------------------------------------------------------
+let selectedPlan = 'yearly';
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan').forEach(p => p.classList.toggle('selected', p.dataset.plan === plan));
+  const p = PRODUCTS[plan];
+  document.getElementById('subscribeBtn').textContent =
+    plan === 'lifetime' ? 'Buy Lifetime — $99.99' : 'Subscribe — ' + p.price + ' / ' + p.period;
+  const note = document.getElementById('renewalNote');
+  if (plan === 'lifetime') {
+    note.textContent = 'Lifetime is a one-time purchase of $99.99. It does not renew and does not expire. Payment will be charged to your Apple ID account at confirmation of purchase.';
+  } else {
+    note.textContent = 'Payment will be charged to your Apple ID account at confirmation of purchase. Subscriptions automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period. Manage or cancel anytime in Settings > Apple ID > Subscriptions.';
+  }
+}
+
+// ---- Cards ------------------------------------------------------------------
+let currentStage = state.profile.stage || 'babble';
+let favFilter = false;
+let currentCard = null;
+
+function renderGrid() {
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = '';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('selected', t.dataset.stage === currentStage));
+  document.getElementById('favChip').classList.toggle('selected', favFilter);
+  const list = CARDS.filter(c => c.stage === currentStage && (!favFilter || state.favorites.includes(c.id)));
+  if (list.length === 0) {
+    grid.innerHTML = '<p class="center muted" style="grid-column:1/-1">No favorites yet — tap the ♥ on a card to save it here.</p>';
+    return;
+  }
+  list.forEach(card => {
+    const btn = document.createElement('button');
+    btn.className = 'card ' + card.stage;
+    const stars = state.stars[card.id] || 0;
+    const isFav = state.favorites.includes(card.id);
+    btn.innerHTML =
+      '<span class="fav-btn" data-fav="' + card.id + '">' + (isFav ? '❤️' : '🤍') + '</span>' +
+      (stars > 0 ? '<span class="star-count">⭐ ' + stars + '</span>' : '') +
+      '<span class="emoji">' + card.emoji + '</span>' +
+      '<span class="label">' + card.label + '</span>' +
+      '<span class="hint">' + card.hint + '</span>';
+    btn.addEventListener('click', () => openPractice(card));
+    btn.querySelector('.fav-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(card.id);
+    });
+    grid.appendChild(btn);
+  });
+  document.getElementById('starsBadge').textContent = '⭐ ' + totalStars();
+}
+function selectStage(stage) {
+  currentStage = stage;
+  favFilter = false;
+  renderGrid();
+}
+function toggleFavFilter() {
+  favFilter = !favFilter;
+  renderGrid();
+}
+function toggleFavorite(id) {
+  const i = state.favorites.indexOf(id);
+  if (i >= 0) state.favorites.splice(i, 1); else state.favorites.push(id);
+  saveState();
+  renderGrid();
+}
+function speakStageIntro() {
+  const list = CARDS.filter(c => c.stage === currentStage);
+  list.forEach((c, i) => setTimeout(() => speak(c.say, 0.7), i * 1400));
+  toast('🔊 Listening to ' + STAGE_NAMES[currentStage] + '…');
+}
+
+// ---- Practice modal -----------------------------------------------------------
+function openPractice(card) {
+  currentCard = card;
+  document.getElementById('practiceEmoji').textContent = card.emoji;
+  document.getElementById('practiceWord').textContent = card.label;
+  document.getElementById('practiceModal').classList.remove('hidden');
+  speak(card.say, card.stage === 'sentences' ? 0.8 : 0.65);
+}
+function hearAgain() {
+  if (currentCard) speak(currentCard.say, currentCard.stage === 'sentences' ? 0.8 : 0.65);
+}
+function earnStar() {
+  if (!currentCard) return;
+  state.stars[currentCard.id] = (state.stars[currentCard.id] || 0) + 1;
+  saveState();
+  renderGrid();
+  speak('Great job!', 0.9);
+  toast('⭐ Great job! ' + totalStars() + ' stars so far!');
+}
+function closePractice() {
+  document.getElementById('practiceModal').classList.add('hidden');
+  currentCard = null;
+}
+
+// ---- Parental gate (7 + 5 = 12) ----------------------------------------------
+let gateResolve = null;
+function askGate() {
+  return new Promise((resolve) => {
+    gateResolve = resolve;
+    const answers = [10, 11, 12, 13].sort(() => Math.random() - 0.5);
+    const box = document.getElementById('gateAnswers');
+    box.innerHTML = '';
+    answers.forEach(n => {
+      const b = document.createElement('button');
+      b.textContent = n;
+      b.addEventListener('click', () => {
+        if (n === 12) {
+          // Correct: hide the modal and resolve true directly.
+          // (Do NOT call closeGate() here — it resolves the promise false.)
+          document.getElementById('gateModal').classList.add('hidden');
+          const r = gateResolve;
+          gateResolve = null;
+          if (r) r(true);
+        } else {
+          const card = document.getElementById('gateCard');
+          card.classList.remove('shake');
+          void card.offsetWidth;
+          card.classList.add('shake');
+          toast('Hmm, try again!');
+        }
+      });
+      box.appendChild(b);
+    });
+    document.getElementById('gateModal').classList.remove('hidden');
+  });
+}
+function closeGate() {
+  document.getElementById('gateModal').classList.add('hidden');
+  if (gateResolve) { gateResolve(false); gateResolve = null; }
+}
+async function openKitGated() {
+  const ok = await askGate();
+  if (ok) showView('view-kit');
+}
+
+// ---- Parent tips --------------------------------------------------------------
+function renderTips() {
+  const list = document.getElementById('tipsList');
+  list.innerHTML = '';
+  TIPS.forEach(([title, body]) => {
+    const d = document.createElement('div');
+    d.className = 'tip';
+    d.innerHTML = '<b>' + title + '</b><br>' + body;
+    list.appendChild(d);
+  });
+}
+
+// ---- Profile -------------------------------------------------------------------
+function loadProfileForm() {
+  document.getElementById('childName').value = state.profile.name || '';
+  document.getElementById('prefStage').value = state.profile.stage || 'babble';
+  updateSubStatus();
+}
+function saveProfile() {
+  state.profile.name = document.getElementById('childName').value.trim();
+  state.profile.stage = document.getElementById('prefStage').value;
+  currentStage = state.profile.stage;
+  saveState();
+  updateGreeting();
+  renderGrid();
+  toast('Saved! ❤️');
+  showView('view-app');
+}
+function resetProgress() {
+  if (!window.confirm('Reset all stars and favorites?')) return;
+  state.stars = {};
+  state.favorites = [];
+  saveState();
+  renderGrid();
+  toast('Progress reset.');
+}
+function updateGreeting() {
+  const name = state.profile.name;
+  document.getElementById('greeting').textContent = name ? "Let's talk, " + name + '! 🗣️' : "Let's talk! 🗣️";
+}
+function updateSubStatus() {
+  const el = document.getElementById('subStatus');
+  if (state.subscribed) {
+    el.textContent = 'Subscription: active (' + state.subscribed.plan + ', via ' + state.subscribed.via + ').';
+  } else {
+    el.textContent = 'Subscription: not active.';
+  }
+}
+
+// ---- Native purchases: RevenueCat + Apple StoreKit -----------------------
+// How this works:
+//  * On a real iPhone/iPad build, Capacitor loads and the RevenueCat
+//    native plugin is reached with Capacitor.registerPlugin('Purchases').
+//    configure() -> getOfferings() -> purchasePackage() / restorePurchases()
+//    all go through Apple's StoreKit sheet. Apple handles the payment.
+//  * The plugin's own JS module is deliberately NOT imported: its ESM
+//    files use extensionless relative imports ('./definitions') that
+//    browsers cannot resolve without a bundler. registerPlugin calls the
+//    exact same native methods the plugin exposes (verified in the
+//    plugin's PurchasesPlugin.swift: configure, getOfferings,
+//    purchasePackage, restorePurchases, getCustomerInfo).
+//  * On plain web (or offline), the native bridge is absent: the paywall
+//    shows a preview note and NEVER asks for a card. There is no web
+//    checkout in this app (Apple Guideline 3.1.1 forbids one).
+let Capacitor = null;
+let Purchases = null;
+let nativeReady = false;
+let purchasesConfigured = false;
+
+async function loadNativeBridge() {
+  try {
+    const cap = await import('@capacitor/core');
+    Capacitor = cap.Capacitor;
+    if (!Capacitor.isNativePlatform()) return; // plain web: preview mode
+    // Reach the native RevenueCat plugin directly through the bridge.
+    // (See the note above for why the plugin's JS module is not imported.)
+    Purchases = Capacitor.registerPlugin('Purchases');
+    nativeReady = true;
+  } catch (e) {
+    console.warn('Native bridge unavailable — running in web preview mode.', e);
+  }
+}
+
+function hasPremium(customerInfo) {
+  try {
+    return Boolean(customerInfo && customerInfo.entitlements && customerInfo.entitlements.active && customerInfo.entitlements.active[ENTITLEMENT_ID]);
+  } catch (e) { return false; }
+}
+
+async function initPurchases() {
+  if (!nativeReady) return;
+  if (REVENUECAT_APPLE_API_KEY.indexOf('TODO') === 0) {
+    document.getElementById('setupNote').classList.remove('hidden');
+    return;
+  }
+  try {
+    await Purchases.configure({ apiKey: REVENUECAT_APPLE_API_KEY });
+    purchasesConfigured = true;
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    if (hasPremium(customerInfo)) {
+      unlock('restored', 'restore');
+    } else if (state.subscribed) {
+      // The store says the subscription is gone (expired/cancelled).
+      state.subscribed = null;
+      saveState();
+      updateSubStatus();
+    }
+  } catch (e) {
+    console.warn('RevenueCat setup failed:', e);
+    toast('Subscriptions could not be loaded. Check your connection and try again.');
+  }
+}
+
+function findPackage(offerings, productId) {
+  const pools = [];
+  if (offerings && offerings.current && offerings.current.availablePackages) {
+    pools.push.apply(pools, offerings.current.availablePackages);
+  }
+  if (offerings && offerings.all) {
+    Object.keys(offerings.all).forEach(k => {
+      const off = offerings.all[k];
+      if (off && off.availablePackages) pools.push.apply(pools, off.availablePackages);
+    });
+  }
+  for (const p of pools) {
+    if (p && p.product && p.product.identifier === productId) return p;
+  }
+  return null;
+}
+
+function isUserCancelled(err) {
+  if (!err) return false;
+  if (String(err.code) === '1') return true;
+  const msg = String(err.message || err).toLowerCase();
+  return msg.indexOf('cancel') !== -1;
+}
+
+function unlock(plan, via) {
+  state.subscribed = { plan: plan, via: via, date: new Date().toISOString() };
+  saveState();
+  updateSubStatus();
+  showView('view-app');
+}
+
+async function onSubscribe() {
+  const ok = await askGate();
+  if (!ok) return;
+  if (!nativeReady) {
+    // Web preview: never charge, never ask for a card.
+    document.getElementById('previewNote').classList.remove('hidden');
+    toast('👀 Preview only — on iPhone/iPad, payment goes through Apple In-App Purchase.');
+    return;
+  }
+  if (!purchasesConfigured) {
+    document.getElementById('setupNote').classList.remove('hidden');
+    toast('Subscriptions are not set up yet — add the RevenueCat key first.');
+    return;
+  }
+  const plan = PRODUCTS[selectedPlan];
+  const btn = document.getElementById('subscribeBtn');
+  btn.disabled = true;
+  try {
+    const offerings = await Purchases.getOfferings();
+    const pkg = findPackage(offerings, plan.id);
+    if (!pkg) {
+      toast('That plan is not available right now. Check the products in App Store Connect and RevenueCat.');
+      return;
+    }
+    const result = await Purchases.purchasePackage({ aPackage: pkg });
+    const customerInfo = result && result.customerInfo;
+    if (hasPremium(customerInfo)) {
+      unlock(selectedPlan, 'purchase');
+      toast('🎉 Welcome to Baby Talk Premium!');
+    } else {
+      toast('Purchase finished, but the subscription is not active yet. Try Restore Purchases.');
+    }
+  } catch (err) {
+    if (isUserCancelled(err)) {
+      toast('No worries — nothing was charged.');
+    } else {
+      console.warn('Purchase failed:', err);
+      toast('Purchase did not go through: ' + (err && err.message ? err.message : err));
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function onRestore() {
+  const ok = await askGate();
+  if (!ok) return;
+  if (!nativeReady) {
+    toast('Restore works on iPhone/iPad after you subscribe there.');
+    return;
+  }
+  if (!purchasesConfigured) {
+    document.getElementById('setupNote').classList.remove('hidden');
+    toast('Subscriptions are not set up yet — add the RevenueCat key first.');
+    return;
+  }
+  try {
+    const { customerInfo } = await Purchases.restorePurchases();
+    if (hasPremium(customerInfo)) {
+      unlock('restored', 'restore');
+      toast('🎉 Your subscription was restored!');
+    } else {
+      toast('No active subscription found for this Apple ID.');
+    }
+  } catch (err) {
+    console.warn('Restore failed:', err);
+    toast('Restore did not work: ' + (err && err.message ? err.message : err));
+  }
+}
+
+// ---- Init -------------------------------------------------------------------
+async function init() {
+  renderTips();
+  updateGreeting();
+  loadProfileForm();
+  currentStage = state.profile.stage || 'babble';
+  selectPlan(selectedPlan);
+  renderGrid();
+  await loadNativeBridge();
+  if (!nativeReady) {
+    document.getElementById('previewNote').classList.remove('hidden');
+  }
+  await initPurchases();
+  if (state.subscribed) showView('view-app'); else showView('view-paywall');
+  // Debug hook for automated checks (harmless in production).
+  window.BabyTalkDebug = {
+    get nativeReady() { return nativeReady; },
+    get purchasesConfigured() { return purchasesConfigured; },
+    PRODUCTS: PRODUCTS,
+    CARDS: CARDS,
+  };
+}
+init();
+
+// Inline onclick handlers need these on window (module scope is not global).
+Object.assign(window, {
+  selectPlan: selectPlan,
+  onSubscribe: onSubscribe,
+  onRestore: onRestore,
+  showView: showView,
+  selectStage: selectStage,
+  toggleFavFilter: toggleFavFilter,
+  speakStageIntro: speakStageIntro,
+  openKitGated: openKitGated,
+  saveProfile: saveProfile,
+  resetProgress: resetProgress,
+  hearAgain: hearAgain,
+  earnStar: earnStar,
+  closePractice: closePractice,
+  closeGate: closeGate,
+  goBackFromLegal: goBackFromLegal,
+});
+</script>
+</body>
+</html>
